@@ -1,0 +1,84 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           Knights-And-Rage
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://git.gvk.idi.ntnu.no/course/prog2006/as/daniehhu/knights-and-rage>
+homepage:       https://github.com/daniehhu/Knights-And-Rage#readme
+bug-reports:    https://github.com/daniehhu/Knights-And-Rage/issues
+author:         Daniel Hao Huynh
+maintainer:     daniehhu@stud.ntnu.no
+copyright:      2022 Daniel Hao Huynh
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/daniehhu/Knights-And-Rage
+
+library
+  exposed-modules:
+      Constants.GameConstants
+      Entity.Base
+      Entity.Entities
+      Entity.Mob.Data
+      Entity.Mob.Functions
+      Entity.Player.Data
+      Entity.Player.Functions
+      GameObjects.Base
+      GameObjects.BaseObjects
+      Lib
+      Root.Functions
+      Stage.Base
+      UI.Functions
+  other-modules:
+      Paths_Knights_And_Rage
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , haskeline
+    , random
+    , split
+    , time
+  default-language: Haskell2010
+
+executable Knights-And-Rage-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_Knights_And_Rage
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Knights-And-Rage
+    , base >=4.7 && <5
+    , haskeline
+    , random
+    , split
+    , time
+  default-language: Haskell2010
+
+test-suite Knights-And-Rage-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_Knights_And_Rage
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Knights-And-Rage
+    , base >=4.7 && <5
+    , haskeline
+    , random
+    , split
+    , time
+  default-language: Haskell2010

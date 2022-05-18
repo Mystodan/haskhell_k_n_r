@@ -3,7 +3,8 @@ instanciatePlayer,
 gameLoop,
 handleEnemyEncounter
 ) where
-
+import Entity.Mob.Functions
+import Combat.Data
 import IO.Root.Functions
 import Root.Functions
 import Constants.GameConstants
@@ -16,17 +17,31 @@ import GameObjects.Base
 import Control.Concurrent
 import GHC.Float.RealFracMethods (roundFloatInt)
 import Entity.Base
+import Entity.Mob.Data
+import Entity.Entities (goblin)
+import GameObjects.BaseObjects (lesserHealthPotion)
 
 
 
-doubleCheck :: IO Bool
-doubleCheck = do
-  putStrLn "Are you sure? (y,n)"
+doubleCheck :: String -> IO Bool
+doubleCheck want = do
+  putStrLn $ "Are you sure you want to "++want++"? (y,n)"
   confirm <- getLine
   if not (null confirm) then
     return (toLower(head  confirm) == 'y')
-  else doubleCheck
+  else doubleCheck want
 
+newRestDialog :: IO()
+newRestDialog = do
+  putStr "\nYou are met with a single campfire"
+  wait 0.5
+  putStr "."
+  wait 0.5
+  putStr "."
+  wait 0.5
+  putStr "."
+  wait 0.5
+  putStr " Which somehow feels safe..."
 
 newEncounterDialog :: IO ()
 newEncounterDialog =  do
@@ -47,7 +62,7 @@ promptPlayerName = do
 handlePlayerName :: (IO String)
 handlePlayerName = do
   pName <- promptPlayerName
-  check <- doubleCheck
+  check <- doubleCheck "finish setting your name"
   if check && pName /= "" then
       return pName
     else
@@ -82,13 +97,18 @@ promptEncounterChoice amount = do
 
 handleEncounterChoice :: Int -> IO Int
 handleEncounterChoice amount = do
+  let choices = "1234567890"
   choice <- promptEncounterChoice amount
-  check <- doubleCheck
-  if check && choice /= "" then
-      return (read choice)
+  check <- doubleCheck "pick this door"
+  if check && choice /= "" && head choice `elem`choices then
+      retVal (read choice)
     else
       handleEncounterChoice amount
-
+  where 
+    retVal choice = 
+      if choice > 0 && choice <= amount then 
+        return choice
+      else handleEncounterChoice amount
 
 getEncounter :: Int -> Int -> IO Stage
 getEncounter seed amount = do
@@ -101,20 +121,18 @@ promptEquip :: String -> IO Bool
 promptEquip  prompt = do
   putStrLn prompt
   choice <- getLine
-  check <- doubleCheck
+  check <- doubleCheck "choose this"
   if check && toLower (head choice) == 'y' then
     return True
   else
     return False
 
 
-
-
 getWhichEquip ::String -> IO Int
 getWhichEquip prompt = do
   putStrLn prompt
   choice <- getLine
-  check <- doubleCheck
+  check <- doubleCheck "equip"
   if check && checkNum choice 0 then
     return $ read choice
   else do
@@ -126,20 +144,75 @@ getWhichHand prompt = do
   putStrLn prompt
   putStr "(right or left):"
   choice <- getLine
-  check <- doubleCheck
+  check <- doubleCheck "equip to this hand"
   if check && choice /= "" then
     return (head choice)
   else do
     putStrLn "Invalid input"
     getWhichHand prompt
 
-handleEnemyEncounter:: Player -> Bool -> IO Player
-handleEnemyEncounter player isPlayerTurn
-  | isPlayerTurn && currentHealth (playerBase player) > 0 = do
-    putStrLn (getPlayerStatusPlate player)
-    handleEnemyEncounter player False
-  | otherwise = handleEnemyEncounter player True
+promptPlayerTurn :: Player -> IO Char
+promptPlayerTurn player = do
+  let choices = ['a','b','p','r']
+  putStrLn $ "Player actions:\n\tAttack, Potion:"++potion_name (potSlot(inventory player))++"["++show (potAmount (inventory player)) ++"], Block, Run"
+  choice <- getLine
+  check <- doubleCheck $ switchResp choice
+  if check && choice /= "" && toLower(head choice) `elem` choices then
+    return (head choice)
+  else do
+    putStrLn "Invalid input"
+    promptPlayerTurn player
+  where
+    want choice = toLower(head choice)
+    switchResp x
+      | want x == 'a' = "Attack"
+      | want x == 'b' = "Block"
+      | want x == 'p' = "use a Potion"
+      | otherwise = "Run"
 
+handlePlayerActions :: Player -> IO Actions
+handlePlayerActions player = do
+  choice <- promptPlayerTurn player
+  if choice == 'a' then
+    return Attack
+  else if choice == 'b' then
+    return Block
+  else if choice == 'p' then
+    return Combat.Data.Potion
+  else
+    handlePlayerActions player
+
+testCombat :: Combat
+testCombat = Combat False True False False
+handleEnemyEncounter:: String -> Player -> Mob -> Combat -> Int -> IO Player
+handleEnemyEncounter message player enemy combat seed
+  | isPlayerTurn combat && currentHealth (playerBase player) > 0 && currentHealth (mobBase enemy) > 0= do
+    putStrLn (getPlayerStatusPlate player)
+    putStrLn message
+    putStrLn (show(currentHealth (mobBase enemy)))
+    playerAct <-  handlePlayerActions player
+    case playerAct of
+      Combat.Data.Potion ->  getEnemyTurn "You have healed!" (healPlayer hpHeal player) enemy
+      Combat.Data.Attack ->  getEnemyTurn "You Have Attacked!" player (damageMob enemy (getPlayerDmg player))
+      Combat.Data.Block -> return player
+      Combat.Data.Run -> return player
+  | not (isCombat combat) = return player
+  | otherwise = do
+    if currentHealth (mobBase enemy) > 0 then
+      if enemyRng == 0 then
+        getPlayerTurn "The monster healed!" player (healMob hpHeal enemy)
+      else
+        getPlayerTurn "You were attacked!" (damagePlayer mobAttack player) enemy
+    else do
+      putStrLn $ "You've Killed The Enemy! EXP: "++ show (difficulty enemy*3)
+      wait 1.5
+      getPlayerTurn "The monster died!" (giveXP (difficulty enemy*3) player) enemy
+  where
+    mobAttack = getMobDmg enemy
+    getEnemyTurn m p e = handleEnemyEncounter m p e (Combat False True False False) (seed+10)
+    getPlayerTurn m p e = handleEnemyEncounter m p e (Combat True False False False) (seed+10)
+    hpHeal = effectivity lesserHealthPotion
+    enemyRng = genRandNum 0 9 seed
 
 handleEncounter :: Player -> Int -> IO Player
 handleEncounter player seed = do
@@ -165,20 +238,101 @@ handleEncounter player seed = do
   else if choice == Stage.Base.Enemy (encounter choice) then do
     clearScreen
     setDelay
-    putStrLn "\nYou have encountered: Enemy"
+    if  encounter choice == Stage.Base.Boss (bossEntity (encounter choice)) then
+      putStrLn "\nYou have encountered: Enemy(boss)"
+    else
+      putStrLn "\nYou have encountered: Enemy(normal)"
+    wait 1.5
+    handleEnemyEncounter "" player (enemy choice) (Combat (turn choice) True False False) seed
 
-
-    return player  else do
+  else do
     clearScreen
     setDelay
     putStrLn "\nEnountered Rest"
-    return player
+    handleRestEncounter player
   where
+    enemy x = if encounter x == Stage.Base.Boss (bossEntity (encounter x)) then
+       bossEntity (encounter x)
+       else
+         head (enemies (encounter x))
+    turn x = dexterity (stats (playerBase player)) > dexterity (stats (mobBase (enemy x)))
     retWep x choice hand = playerWepEquip x (weap choice) [hand]
     retPot x choice = playerPotEquip x (pots choice)
     t_equip = treasure
     weap x = head (handEquipment (t_equip x))
     pots x = head (potions (t_equip x))
+
+
+
+handleRestEncounter :: Player -> IO Player
+handleRestEncounter player = do
+  choice <- promptRestEncounter player
+  case choice of
+    's' -> statUpHandler player
+    'r' -> handleRestPlayer player
+    _ -> handleRestEncounter player
+
+
+statUpHandler :: Player -> IO Player
+statUpHandler player = do
+  choice <-statUpPrompt
+  case choice of
+    'v' -> handleRestEncounter $ statUpPlayer player (head vit)
+    'r' -> handleRestEncounter $ statUpPlayer player (head res)
+    'd' -> handleRestEncounter $ statUpPlayer player (head dex)
+    's' -> handleRestEncounter $ statUpPlayer player (head str)
+    _ -> statUpHandler player
+
+statUpPrompt ::  IO Char
+statUpPrompt = do
+  let choices = ['v','s','d','r']
+  putStrLn $ "Player stats:\n\tVitality, Strength, Dexterity, Resilience"
+  choice <- getLine
+  check <- doubleCheck $ switchResp choice
+  if check && choice /= "" && toLower(head choice) `elem` choices then
+    return (head choice)
+  else do
+    putStrLn "Invalid input"
+    statUpPrompt
+    where
+    want choice = toLower(head choice)
+    switchResp x
+      | want x == 'v' = "Spec into Vitality"
+      | want x == 's' = "Spec into Strength"
+      | want x == 'd' = "Spec into Dexterity"
+      | want x == 'r' = "Spec into Resilience"
+      | otherwise = "ERROR"
+
+
+
+
+handleRestPlayer:: Player -> IO Player
+handleRestPlayer player = do
+  check <- doubleCheck "Rest"
+  if check then
+    return $ restPlayer player
+  else
+    handleRestEncounter player
+
+promptRestEncounter :: Player -> IO Char
+promptRestEncounter player = do
+  let choices = ['r','s']
+  newRestDialog
+  putStrLn $ "\nPlayer actions:\n\tStat Up ["++show levelAmount++"], Rest"
+  choice <- getLine
+  check <- doubleCheck $ switchResp choice
+  if check && choice /= "" && toLower(head choice) `elem` choices then
+    return (head choice)
+  else do
+    putStrLn "Invalid input"
+    promptRestEncounter player
+  where
+    levelAmount = (experiencePts (playerProgress player)`div` 10) `div` level (playerProgress player)
+    want choice = toLower(head choice)
+    switchResp x
+      | want x == 's' = "Level Up"
+      | otherwise = "Rest"
+
 
 
 equipPrompt :: HandEquipment ->IO String
@@ -188,7 +342,7 @@ equipPrompt equip = do
 handleEquip :: Player -> HandEquipment -> IO Char
 handleEquip player equip = do
   choice <- equipPrompt equip
-  check <- doubleCheck
+  check <- doubleCheck "equip"
   if check && choice /= "" then
      return (head choice)
   else

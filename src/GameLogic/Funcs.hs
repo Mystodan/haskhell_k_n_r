@@ -1,7 +1,14 @@
 module GameLogic.Funcs(
+  giveXP,
+  getEntityDmg,
+  restPlayer,
   initPlayer,
   getPlayerName,
+  getPlayerDmg,
   modifyPlayer,
+  healPlayer,
+  healMob,
+  getMobDmg,
   damagePlayer,
   getStat,
   statUpPlayer,
@@ -15,11 +22,11 @@ module GameLogic.Funcs(
   getCurrentEncounters,
   displayTreasure,
   getCurrentEquipNames,
+  getHealthAsContainer,
    ) where
 import Data.Char ( toLower )
 import Entity.Entities
 import UI.Functions
-
 import Entity.Player.Functions
     ( createPlayer, modifyPlayer, modifyPlayerModel )
 import Constants.GameConstants(
@@ -31,6 +38,9 @@ import Constants.GameConstants(
 import GameObjects.Base
 import GameObjects.BaseObjects
 import Stage.Base
+import Entity.Mob.Data(
+  Mob(..)
+  )
 import Entity.Player.Data(
     Player(..),
     PlayerProgress (..),
@@ -47,6 +57,32 @@ import Root.Functions
 {- getMaps::[Stage] -> Int-> Int ->[Stage]
 getMaps map seed iter = do -}
 
+restPlayer :: Player -> Player
+restPlayer player = retval
+  where
+    retval =
+      modifyPlayerModel
+      player
+      refreshHealth
+      refreshPotion
+      (playerProgress player)
+
+    refreshHealth = EntityBase
+        (name (playerBase player))
+        (getEntityHealth (level (playerProgress player))  (vitality (stats (playerBase player))))
+        (isAlive (playerBase player))
+        (stats (playerBase player))
+        (equipped (playerBase player))
+    refreshPotion = if potAmount (inventory player) < level (playerProgress player) then
+      InventoryPotion (potSlot (inventory player)) (potAmount (inventory player)+1)
+      else
+        InventoryPotion (potSlot (inventory player)) (potAmount (inventory player))
+
+
+
+giveXP :: Int -> Player -> Player
+giveXP difficulty player =
+    modifyPlayerModel player (playerBase player) (inventory player) (PlayerProgress (level (playerProgress player)) (experiencePts (playerProgress player)+ difficulty))
 
 getRandWeapon :: Int -> HandEquipment
 getRandWeapon seed = do
@@ -64,23 +100,27 @@ getCurrentEncounters list amount seed
   | amount > 0 = retval
   | otherwise = list
   where
-    retval = getCurrentEncounters (append stage list) (amount-1) (seed+10)
-    stage = generateStage (seed+10)
+    initStage = []
+    retval = getCurrentEncounters (append stage list) (amount-1) (seed + 1)
+    stage = generateStage seed
 
 generateStage::Int -> Stage
 generateStage seed = do
-  if rng >= 102 && rng< 103 then   tres --0 and 10
-  else if rng >= 0 && rng< 101 then  enem -- 11 and 45
+  if rng >= 0 && rng< 5 then   tres --0 and 10
+  else if rng >= 5 && rng<= 60 then  enem -- 11 and 45
   else rest
   where
-    rng = genRandNum 0 100 seed
+    rng = genRandNum 1 100 seed
     tres = Stage.Base.Treasure {
       treasure = GameObjects.Base.Treasure{
       potions = [getRandPotion seed],
       handEquipment = [getRandWeapon seed]
       }
      }
-    enem =  Stage.Base.Enemy $ Default [goblin]
+    bossRng = genRandNum 100 200 (seed+15)
+    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 105 then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
+    randBoss = allBoss!!genRandNum 0 (length allBoss-1) (seed+10)
+    randMob = allMobs!!genRandNum 0 (length allMobs-1) (seed+10)
     rest = Stage.Base.Rest
 
 getPlayerName::Player -> String
@@ -151,8 +191,65 @@ displayTreasure tresr wCount pCount retStr
 initPlayer::String -> Player
 initPlayer = createPlayer
 
+getPot:: Player -> Bool
+getPot player = potAmount (inventory player) > 0
+
+healEntity :: Int -> EntityBase -> EntityBase
+healEntity heal entity =
+  modifyEntity
+    entity
+    (if healedHP > maxHP  then maxHP else healedHP)
+    (isAlive entity)
+    (stats entity)
+    (equipped entity)
+ where
+    maxHP = getEntityHealth (vitality (stats entity)) 1
+    healedHP = currentHealth entity + heal
+
+healMob :: Int->Mob->Mob
+healMob heal mob = retval
+  where retval = Mob (healEntity heal (mobBase mob)) (mobType mob) (difficulty mob)
+
+
+healPlayer :: Int -> Player -> Player
+healPlayer heal player = if getPot player then
+  modifyPlayer
+      player
+      (if healedHP > maxHP  then maxHP else healedHP)
+      (stats (playerBase player))
+      (isAlive (playerBase player))
+      (Entity.Player.Data.InventoryPotion (potSlot (inventory player)) 0)
+      (equipped (playerBase player))
+      (playerProgress player)
+  else
+    player
+  where
+    maxHP = getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))
+    healedHP = currentHealth (playerBase player) + heal
+
+getEntityDmg:: EntityBase -> Int
+getEntityDmg entity = getDmg
+  where
+    getWeapon hand
+      | hand(equipped entity) == GameObjects.Base.Weapon (weaponbase (hand(equipped entity))) =
+      GameObjects.Base.Weapon (weaponbase (hand (equipped entity)))
+      | hand(equipped entity) == GameObjects.Base.Special (weaponbase (hand(equipped entity))) NoEff =
+      GameObjects.Base.Special (weaponbase (hand (equipped entity))) NoEff
+      | otherwise = GameObjects.Base.None
+
+    right = getWeapon rightHand
+    left = getWeapon leftHand
+    dmg side = if side /= GameObjects.Base.None then attack (weaponbase side) else 0
+    getDmg = dmg right + dmg left+strength (stats entity)
+
+getPlayerDmg::Player -> Int
+getPlayerDmg player = getEntityDmg(playerBase player)+level (playerProgress player)
+
+getMobDmg :: Mob -> Int
+getMobDmg enemy = getEntityDmg(mobBase enemy)+difficulty enemy
+
 damagePlayer::Int -> Player -> Player
-damagePlayer damage player = do
+damagePlayer damage player =
   if currentHealth (playerBase player) - damage < 1 then
     modifyPlayer
       player
@@ -174,17 +271,15 @@ damagePlayer damage player = do
 
 
 
+
 getHealthAsContainer:: Int -> Int -> String
 getHealthAsContainer curr max
-  | comp > 0.9 && curr > 0 = "{OOOOOO}"
-  | comp > 0.8 && comp <= 0.9 && curr > 0 = "{OOOOOØ}"
-  | comp > 0.6 && comp <= 0.8 && curr > 0 = "{OOOOØØ}"
-  | comp > 0.4 && comp <= 0.6 && curr > 0 = "{OOOØØØ}"
-  | comp > 0.2 && comp <= 0.4 && curr > 0 = "{OOØØØØ}"
-  | comp > 0.0 && comp <= 0.2 && curr > 0 = "{OØØØØØ}"
+  | comp > 0 = genBar comp 6
   | otherwise = "{DEAD}"
   where
     comp = fromIntegral curr/fromIntegral max
+    genBar percent width = "{" ++ replicate (width-sections percent width) 'Ø' ++ replicate (sections percent width) 'O' ++ "}"
+    sections percent width = round (percent * fromIntegral width) :: Int
 
 setHealth::Int -> Int-> String
 setHealth curr max = retVal

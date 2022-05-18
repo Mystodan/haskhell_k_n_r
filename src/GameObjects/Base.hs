@@ -7,7 +7,7 @@ module GameObjects.Base(
     EffectType(..),
   )where
 
-data EffectType = Leech | Frost deriving (Eq,Show)
+data EffectType = NoEff |Leech | Frost deriving (Eq,Show)
 
 data BaseWeapon = BaseWeapon{
   weapon_name :: String, 

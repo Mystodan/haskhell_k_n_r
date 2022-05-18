@@ -1,4 +1,7 @@
-module Entity.Mob.Functions(defineMob) where
+module Entity.Mob.Functions(
+  defineMob,
+  damageMob,
+  ) where
 
 import Entity.Mob.Data(
     Mob(..),
@@ -15,6 +18,7 @@ import Entity.Base(
   )
 import Root.Functions(
     getEntityHealth,
+    damageEntity,
   )
 import Data.Char ( toLower )
 
@@ -33,6 +37,9 @@ defineMob mob_name mob_type stats equipment set =  initMob
       isAlive = True,
       equipped = equipment
     }
+
+damageMob :: Mob -> Int -> Mob
+damageMob mob damage = Mob (damageEntity damage (mobBase mob)) (mobType mob) (difficulty mob) 
 
 
 modifyMob::Mob -> Stats -> Equipment -> Mob

@@ -17,11 +17,11 @@ import GameObjects.BaseObjects(
     lesserHealthPotion,
     shieldPotion,
   )
-import GameObjects.Base 
+import GameObjects.Base
 import Entity.Player.Data(
     PlayerInventory(..),
     Player(..),
-    PlayerProgress(..)  
+    PlayerProgress(..)
   )
 
 
@@ -61,6 +61,9 @@ createPlayer inn_name =  initPlayer
     }
 
 
+
+
+
 modifyPlayer:: Player -> Int -> Stats -> Bool ->PlayerInventory -> Equipment -> PlayerProgress ->Player
 modifyPlayer player currHP stats isAlive inventory equipment progress  = initPlayer
   where
@@ -76,7 +79,7 @@ modifyPlayer player currHP stats isAlive inventory equipment progress  = initPla
       isAlive = isAlive,
       equipped = equipment
     }
-  
+
 modifyPlayerModel:: Player -> EntityBase -> PlayerInventory -> PlayerProgress ->Player
 modifyPlayerModel player baseinfo inventory progress  = initPlayer
   where
@@ -85,5 +88,5 @@ modifyPlayerModel player baseinfo inventory progress  = initPlayer
       playerProgress = progress,
       inventory = inventory
     }
-    
+
 

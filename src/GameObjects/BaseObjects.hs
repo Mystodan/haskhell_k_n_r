@@ -56,7 +56,7 @@ lesserHealthPotion = Potion{
     isOverTurns = False,
     isFlat = True
   },
-  effectivity = 1,
+  effectivity = 4,
   potion_rarity = 0.3
 }
 shieldPotion::Potion

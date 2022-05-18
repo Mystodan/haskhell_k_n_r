@@ -1,5 +1,7 @@
 module Root.Functions(
   checkNum,
+  modifyEntity,
+  damageEntity,
   compareElemToList,
   append,
   genRandNum,
@@ -59,7 +61,7 @@ equip entityBase hand weapon = do
     currentHand = equipped entityBase
 
 
-    
+
 entityEquip :: EntityBase ->  HandEquipment -> WeaponHand -> EntityBase
 entityEquip entity weapon hand =
    EntityBase
@@ -68,6 +70,13 @@ entityEquip entity weapon hand =
     (isAlive entity)
     (stats entity)
     (equip entity hand weapon)
+
+modifyEntity :: EntityBase -> Int -> Bool -> Stats -> Equipment -> EntityBase
+modifyEntity entity = EntityBase (name entity)
+
+damageEntity:: Int -> EntityBase -> EntityBase
+damageEntity damage entity = 
+  modifyEntity entity (currentHealth entity-damage) ((currentHealth entity - damage) >= 1) (stats entity) (equipped entity)
 
 getEntityHealth :: Int -> Int-> Int
 getEntityHealth vitality level = ((level*3) + (vitality*3)) + statToHealth

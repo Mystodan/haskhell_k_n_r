@@ -32,9 +32,11 @@ library
       Entity.Mob.Functions
       Entity.Player.Data
       Entity.Player.Functions
+      GameLogic.Funcs
       GameObjects.Base
       GameObjects.BaseObjects
-      Lib
+      IO.GameLoop.Handler
+      IO.Root.Functions
       Root.Functions
       Stage.Base
       UI.Functions

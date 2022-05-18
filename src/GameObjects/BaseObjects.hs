@@ -2,6 +2,8 @@ module GameObjects.BaseObjects(
   lesserHealthPotion,
   shieldPotion,
   zweihandler,
+  enparakystos,
+  shortSword,
   allWeapons,
   allPotions,
 )where

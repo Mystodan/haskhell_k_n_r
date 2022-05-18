@@ -1,4 +1,4 @@
-module Lib(
+module GameLogic.Funcs(
   initPlayer,
   getPlayerName,
   modifyPlayer,
@@ -7,12 +7,14 @@ module Lib(
   statUpPlayer,
   zweihandler ,
   entityEquip,
-  playerEquip,
+  playerPotEquip,
+  playerWepEquip,
   generateStage,
   setHealth,
   getPlayerStatusPlate,
   getCurrentEncounters,
   displayTreasure,
+  getCurrentEquipNames,
    ) where
 import Data.Char ( toLower )
 import Entity.Entities
@@ -30,7 +32,9 @@ import GameObjects.Base
 import GameObjects.BaseObjects
 import Stage.Base
 import Entity.Player.Data(
-    Player(..), PlayerProgress (level),
+    Player(..),
+    PlayerProgress (..),
+    PlayerInventory (..),
   )
 import Entity.Base (
     Stat(..),
@@ -65,8 +69,8 @@ getCurrentEncounters list amount seed
 
 generateStage::Int -> Stage
 generateStage seed = do
-  if rng >= 0 && rng< 33 then   tres
-  else if rng >= 33 && rng< 66 then  enem
+  if rng >= 102 && rng< 103 then   tres --0 and 10
+  else if rng >= 0 && rng< 101 then  enem -- 11 and 45
   else rest
   where
     rng = genRandNum 0 100 seed
@@ -82,11 +86,24 @@ generateStage seed = do
 getPlayerName::Player -> String
 getPlayerName player = name (playerBase player)
 
-playerEquip:: Player -> HandEquipment -> String -> Player
-playerEquip player weapon hand = modifyPlayerModel player
-  (entityEquip (playerBase player) zweihandler (getHand "right"))
-  (inventory player)
-  (playerProgress player)
+playerPotEquip :: Player-> Potion -> Player
+playerPotEquip player pot = do
+  retval
+  where
+    retval = modifyPlayerModel player
+      (playerBase player)
+      (InventoryPotion pot 1)
+      (playerProgress player)
+
+
+playerWepEquip:: Player -> HandEquipment -> String -> Player
+playerWepEquip player weapon hand = do
+  retval
+  where
+    retval = modifyPlayerModel player
+      (entityEquip (playerBase player) weapon (getHand hand))
+      (inventory player)
+      (playerProgress player)
 
 getStat :: String -> Stat
 getStat stat
@@ -185,13 +202,36 @@ getPlayerEquipped player = (rHand,lHand)
 getPlayerStatusPlate:: Player -> String
 getPlayerStatusPlate player = setContainer retVal 27 0 ""
   where
-    retVal = [id,hpBar,equipped]
+    retVal = [id,hpBar,equipR, equipL, potEquip, potNum]
     id = ("Name", name (playerBase player) )
     hpBar = ("Health:",setHealth currentHP maxHP)
     currentHP = currentHealth (playerBase player)
-    equipped = ("Equipped:",show(eq_r ,eq_l))
-    (eq_r,eq_l) = getPlayerEquipped player
+    equipped x y = (x,y)
+    equipR = equipped "Equipped(r):" eq_r
+    equipL = equipped "Equipped(l):" eq_l
+    potEquip = equipped "Potion Slot:" (potion_name (getPotValues potSlot))
+    potNum =  equipped ("Potion Amount["++ show (level (playerProgress player)) ++"]") (show (getPotValues potAmount))
+    getPotValues x =  x (inventory player)
+    (eq_r,eq_l) = getCurrentEquipNames player
     maxHP = getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))
 
-
-
+getCurrentEquipNames:: Player -> (String,String)
+getCurrentEquipNames player = (
+  if right ==  GameObjects.Base.Weapon (weaponbase right) || right == compareSpecial right  then
+    getWeaponName right
+  else if right ==  getShield right then
+    shield_name right
+  else "None",
+  if left == GameObjects.Base.Weapon (weaponbase left) || left == compareSpecial left then
+    getWeaponName left
+  else if left ==  getShield left then
+    shield_name left
+  else "None")
+  where
+    (right, left) = getPlayerEquipped player
+    compareSpecial x = GameObjects.Base.Special (weaponbase x) (getWeaponEffect x)
+    getShield x = GameObjects.Base.Shield (shield_name x) (block x) (shield_rarity x)
+    getWeaponEffect = effect
+    getWeaponName x = weapon_name(weaponbase x)
+    getShieldName = shield_name
+    

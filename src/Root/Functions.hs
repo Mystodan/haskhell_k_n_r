@@ -1,4 +1,6 @@
 module Root.Functions(
+  checkNum,
+  compareElemToList,
   append,
   genRandNum,
   getEntityHealth,
@@ -10,18 +12,19 @@ module Root.Functions(
   )where
 
 import Constants.GameConstants(
-    statToHealth,
+    statToHealth, numPool,
   )
 import Entity.Base
-    ( Equipment(Equipment),
+    ( Equipment(..),
       Stats(..),
       EntityBase(..),
       Stat(..),
       )
-import GameObjects.Base 
+import GameObjects.Base
 import Data.Char ( toLower )
 import System.Random ( mkStdGen, Random(randomR) )
 import Data.Time (UTCTime (utctDayTime))
+import Entity.Player.Data
 
 
 data WeaponHand = Right | Left| None deriving (Show)
@@ -32,37 +35,41 @@ append a = foldr (:) [a]
 
 genRandNum:: Int -> Int -> Int -> Int
 genRandNum min max seed = retNum
-  where 
+  where
     (retNum,_) = randomR (min,max) $ mkStdGen seed
 
-getHand :: String -> WeaponHand 
-getHand hand = 
-  case map toLower hand of
-    "left" -> Root.Functions.Left
-    "right" -> Root.Functions.Right
+getHand :: String -> WeaponHand
+getHand hand =
+  case toLower (head hand) of
+    'l' -> Root.Functions.Left
+    'r' -> Root.Functions.Right
     _ -> Root.Functions.None
 
-equip :: WeaponHand -> HandEquipment -> Equipment  
-equip hand weapon = do
+equip :: EntityBase -> WeaponHand -> HandEquipment -> Equipment
+equip entityBase hand weapon = do
   let isTwo = isTwohand (weaponbase weapon)
-  if isTwo then 
-    Equipment weapon GameObjects.Base.None 
+  if isTwo then
+    Equipment weapon GameObjects.Base.None
   else
     case hand of
-        Root.Functions.Left -> Equipment weapon GameObjects.Base.None 
-        Root.Functions.Right -> Equipment GameObjects.Base.None weapon
-        _ -> Equipment GameObjects.Base.None GameObjects.Base.None
+        Root.Functions.Right -> Equipment weapon (leftHand currentHand)
+        Root.Functions.Left -> Equipment (rightHand currentHand) weapon
+        _ -> currentHand
+  where
+    currentHand = equipped entityBase
 
-entityEquip :: EntityBase ->  HandEquipment -> WeaponHand -> EntityBase 
+
+    
+entityEquip :: EntityBase ->  HandEquipment -> WeaponHand -> EntityBase
 entityEquip entity weapon hand =
-   EntityBase 
-    (name entity) 
-    (currentHealth entity) 
-    (isAlive entity) 
-    (stats entity) 
-    (equip hand weapon)
+   EntityBase
+    (name entity)
+    (currentHealth entity)
+    (isAlive entity)
+    (stats entity)
+    (equip entity hand weapon)
 
-getEntityHealth :: Int -> Int-> Int 
+getEntityHealth :: Int -> Int-> Int
 getEntityHealth vitality level = ((level*3) + (vitality*3)) + statToHealth
 
 allocateStat:: Stats -> Stat -> Stats
@@ -85,16 +92,25 @@ allocateStat list val
                         (resilience list + 1)
   | otherwise = list
 
-getSeed ::UTCTime -> Int 
+getSeed ::UTCTime -> Int
 getSeed currTime = floor $ utctDayTime currTime ::Int
 
 entityAllocateStat::EntityBase -> Stat -> EntityBase
 entityAllocateStat entity stat = retVal
-  where 
-    retVal = EntityBase 
-      (name entity) 
-      (currentHealth entity)  
-      (isAlive entity) 
-      (allocateStat (stats entity) stat) 
+  where
+    retVal = EntityBase
+      (name entity)
+      (currentHealth entity)
+      (isAlive entity)
+      (allocateStat (stats entity) stat)
       (equipped entity)
 
+
+compareElemToList:: Eq a => a -> [a] -> Bool
+compareElemToList  = elem
+
+checkNum :: String -> Int ->  Bool
+checkNum list itr
+  | itr == length list && compareElemToList (list!!(itr-1)) numPool = True
+  | itr < length list && compareElemToList (list!!itr) numPool = checkNum list (itr+1)
+  | otherwise = False

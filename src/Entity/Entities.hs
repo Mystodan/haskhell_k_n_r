@@ -12,21 +12,22 @@ import  Entity.Mob.Data(
     Mob(..),
     MobType(..),
   )
-import GameObjects.Base 
+import GameObjects.Base
 import Entity.Mob.Functions (
   defineMob,
   )
 import qualified Entity.Mob.Data as MobType
 import GameObjects.BaseObjects ( zweihandler, allWeapons )
 
-allMobs :: [Mob]
-allMobs = [goblin, zursmann]
+allMobs :: Int -> [Mob]
+allMobs x = [goblin x, zursmann, zombie x, slime x]
 
-allBoss :: [Mob]
-allBoss = [ruud]
+allBoss :: Int -> [Mob]
+allBoss x = [ruud x]
 
-ruud :: Mob
-ruud = defineMob "Rewd" MobType.Default Stats{
+
+ruud :: Int -> Mob
+ruud = defineMob "Rewd" MobType.Ruud Stats{
   vitality = 3,
   strength = 3,
   dexterity = 3,
@@ -34,10 +35,32 @@ ruud = defineMob "Rewd" MobType.Default Stats{
   } Equipment {
   rightHand = zweihandler,
   leftHand = None
-  } 1
+  }
+
+zombie :: Int -> Mob
+zombie = defineMob "Zombie" MobType.Default Stats{
+  vitality = 1,
+  strength = 3,
+  dexterity = 1,
+  resilience = 3
+  } Equipment {
+  rightHand = None,
+  leftHand = None
+  }
+
+slime :: Int -> Mob
+slime = defineMob "Slime" MobType.Default Stats{
+  vitality = 1,
+  strength = 2,
+  dexterity = 1,
+  resilience = 0
+  } Equipment {
+  rightHand = None,
+  leftHand = None
+  }
 
 
-goblin::Mob 
+goblin::Int -> Mob
 goblin = defineMob "Goblin" MobType.Default Stats{
   vitality = 1,
   strength = 1,
@@ -46,10 +69,10 @@ goblin = defineMob "Goblin" MobType.Default Stats{
   } Equipment {
   rightHand = None,
   leftHand = None
-  } 1
+  }
 
 
-zursmann::Mob 
+zursmann::Mob
 zursmann = defineMob "Zursmann" MobType.Default Stats{
   vitality = 1,
   strength = 0,

@@ -16,15 +16,15 @@ data PlayerInventory =
   potSlot :: Potion,
   potAmount :: Int
   }|
-  InventoryNone deriving (Show)
+  InventoryNone deriving (Eq,Show)
 
 data PlayerProgress = PlayerProgress{
   level :: Int,
   experiencePts :: Int
-} deriving (Show)
+} deriving (Eq,Show)
 
 data Player = Player{
   playerBase :: EntityBase, 
   playerProgress :: PlayerProgress,
   inventory :: PlayerInventory
-} deriving (Show)
+} deriving (Eq,Show)

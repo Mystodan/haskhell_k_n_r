@@ -97,7 +97,7 @@ promptEncounterChoice amount = do
 
 handleEncounterChoice :: Int -> IO Int
 handleEncounterChoice amount = do
-  let choices = "1234567890"
+  let choices = numPool
   choice <- promptEncounterChoice amount
   check <- doubleCheck "pick this door"
   if check && choice /= "" && head choice `elem`choices then

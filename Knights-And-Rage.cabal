@@ -78,8 +78,10 @@ test-suite Knights-And-Rage-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Knights-And-Rage
+      HUnit
+    , Knights-And-Rage
     , base >=4.7 && <5
+    , doctest
     , haskeline
     , random
     , split

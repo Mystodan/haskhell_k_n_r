@@ -27,7 +27,7 @@ allBoss x = [ruud x]
 
 
 ruud :: Int -> Mob
-ruud = defineMob "Rewd" MobType.Ruud Stats{
+ruud diff = defineMob "Rewd" MobType.Ruud Stats{
   vitality = 3,
   strength = 3,
   dexterity = 3,
@@ -35,10 +35,10 @@ ruud = defineMob "Rewd" MobType.Ruud Stats{
   } Equipment {
   rightHand = zweihandler,
   leftHand = None
-  }
+  } (diff+2)
 
 zombie :: Int -> Mob
-zombie = defineMob "Zombie" MobType.Default Stats{
+zombie diff = defineMob "Zombie" MobType.Default Stats{
   vitality = 1,
   strength = 3,
   dexterity = 1,
@@ -46,7 +46,7 @@ zombie = defineMob "Zombie" MobType.Default Stats{
   } Equipment {
   rightHand = None,
   leftHand = None
-  }
+  } (diff+1)
 
 slime :: Int -> Mob
 slime = defineMob "Slime" MobType.Default Stats{

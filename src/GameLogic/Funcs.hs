@@ -1,6 +1,5 @@
 module GameLogic.Funcs(
   giveXP,
-  getEntityDmg,
   restPlayer,
   initPlayer,
   getPlayerName,
@@ -12,7 +11,6 @@ module GameLogic.Funcs(
   damagePlayer,
   getStat,
   statUpPlayer,
-  zweihandler ,
   entityEquip,
   playerPotEquip,
   playerWepEquip,

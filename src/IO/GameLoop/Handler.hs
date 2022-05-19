@@ -266,10 +266,12 @@ handleEncounter player seed = do
        bossEntity (encounter x)
        else
          head (enemies (encounter x))
-    turn x = (dexterity (stats (playerBase player)) > dexterity (stats (mobBase (enemy x)))) || (do
-    case genRandNum 0 1 (seed+10) of
-      0 -> True
-      _ -> False)
+    turn x = (dexterity (stats (playerBase player)) > dexterity (stats (mobBase (enemy x)))) 
+      || (do
+            case genRandNum 0 1 (seed+10) of
+              0 -> True
+              _ -> False
+            )
     retWep x choice hand = playerWepEquip x (weap choice) [hand]
     retPot x choice = playerPotEquip x (pots choice)
     t_equip = treasure

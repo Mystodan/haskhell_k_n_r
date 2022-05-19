@@ -192,7 +192,7 @@ handleEnemyEncounter message player enemy combat seed
     putStrLn (getPlayerStatusPlate player)
     putStrLn $ "["++name (mobBase enemy)++"]"
     putStrLn message
-    putStrLn (show(currentHealth (mobBase enemy)))
+    putStrLn (name (mobBase enemy)++" HP:"++show(currentHealth (mobBase enemy)))
     playerAct <-  handlePlayerActions player
     case playerAct of
       Combat.Data.Potion ->  getEnemyTurn "You have healed!" (healPlayer hpHeal player) enemy

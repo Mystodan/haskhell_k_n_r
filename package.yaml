@@ -51,5 +51,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Knights-And-Rage
-    - doctest
     - HUnit

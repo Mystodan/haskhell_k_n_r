@@ -28,3 +28,6 @@ Recommended to play by running `main` in `stack ghci` for best gameplay experien
 <br><br>
 The game has yet to include character concurrency, however that would be the next thing implemented.
 
+# Known Issues
+Certain symbols not supported by all systems
+>Changed symbols in order for the application to run better in other systems, however a known issue is that my UI might contain symbols that arent allowed on all systems.

@@ -298,7 +298,7 @@ getHealthAsContainer curr max
   | otherwise = "{DEAD}"
   where
     comp = fromIntegral curr/fromIntegral max
-    genBar percent width = "{" ++ replicate (sections percent width) 'X' ++ replicate (width-sections percent width) 'O' ++ "}"
+    genBar percent width = "{" ++ replicate (sections percent width) 'O' ++ replicate (width-sections percent width) 'X' ++ "}"
     sections percent width = round (percent * fromIntegral width) :: Int
 
 setHealth::Int -> Int-> String

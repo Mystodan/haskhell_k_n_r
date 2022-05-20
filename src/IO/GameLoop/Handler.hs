@@ -210,8 +210,6 @@ handlePlayerActions player = do
       | otherwise = ""
 
   
-testCombat :: Combat
-testCombat = Combat False True False False
 handleEnemyEncounter:: String -> Player -> Mob -> Combat -> Int -> IO Player
 handleEnemyEncounter message player enemy combat seed
   | isPlayerTurn combat && currentHealth (playerBase player) > 0 && currentHealth (mobBase enemy) > 0= do
@@ -365,16 +363,16 @@ statUpPrompt = do
   let choices = ['v','s','d','r']
   putStrLn $ "Player stats:\n\tVitality, Strength, Dexterity, Resilience"
   choice <- getLine
-  check <- doubleCheck $ switchResp choice
-  if check && choice /= "" && toLower(head choice) `elem` choices then
-    return (head choice)
-  else if not (toLower(head choice) `elem` choices) then do
-    putStrLn "Invalid input"
-    statUpPrompt
+  if (want choice) `elem` choices then do
+    check <- doubleCheck $ switchResp choice
+    if check then
+        return $ want choice
+    else 
+        statUpPrompt
   else do
     putStrLn "Invalid input"
     statUpPrompt
-    where
+  where
     want choice = toLower(head choice)
     switchResp x
       | want x == 'v' = "Spec into Vitality"
@@ -398,8 +396,8 @@ promptRestEncounter player = do
   putStrLn $ "\nPlayer actions:\n\tStat Up ["++show levelAmount++"], Rest"
   choice <- getLine
   check <- doubleCheck $ switchResp choice
-  if check && choice /= "" && toLower(head choice) `elem` choices then
-    return (head choice)
+  if check && choice /= "" && want choice `elem` choices then
+    return (want choice)
   else do
     putStrLn "Invalid input"
     promptRestEncounter player
@@ -422,7 +420,7 @@ handleEquip player equip = do
   choice <- equipPrompt equip
   check <- doubleCheck "equip"
   if check && choice /= "" then
-     return (head choice)
+     return (toLower(head choice))
   else
     handleEquip player equip
 

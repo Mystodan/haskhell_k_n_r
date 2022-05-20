@@ -14,7 +14,8 @@ module Constants.GameConstants(
   noSuchArgsText,
   inappropriateAmountOfFlags,
   intro,
-  screen
+  screen,
+  outro
   )where
 
 
@@ -33,6 +34,11 @@ intro :: String
 intro =  
    "\nWelcome to Knights and Rage!\n\n"
  ++">> PRESS `ENTER` TO START <<"
+outro :: String -> String
+outro x =  
+   "\nWell Played! Knights and Rage!\n\n"
+ ++ x
+ ++"\n>> PRESS `ENTER` TO QUIT <<"
 statToHealth::Int
 statToHealth = 6
 

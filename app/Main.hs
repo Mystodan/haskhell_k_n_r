@@ -6,7 +6,7 @@ import IO.GameLoop.Handler
 import Entity.Player.Data
 import System.Environment (getArgs)
 import Constants.GameConstants
-    ( helpText, inappropriateAmountOfFlags, noSuchArgsText, intro, screen ) 
+    ( helpText, inappropriateAmountOfFlags, noSuchArgsText, intro, screen, outro ) 
 
 
 main :: IO ()
@@ -22,6 +22,10 @@ main = do
     mainMenu
     startGame
   where
+    endScreen x = do
+      putStrLn $ outro x
+      _ <- getLine
+      putStr "" 
     mainMenu = do 
       putStrLn screen   
       putStrLn intro
@@ -35,5 +39,5 @@ main = do
       let seed = getSeed currTime
       newPlayer <- instanciatePlayer
       player <- gameLoop newPlayer seed
-      putStrLn $ "Level: "++show( level (playerProgress player))
+      endScreen $ "Your Level: "++show( level (playerProgress player))
 

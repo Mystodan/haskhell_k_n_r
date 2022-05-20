@@ -37,8 +37,8 @@ ruud diff seed = defineMob "Rewd" MobType.Ruud Stats{
   dexterity = calculateDex 3 dif seed,
   resilience = 3
   } Equipment {
-  rightHand = zweihandler,
-  leftHand = None
+  rightHand = zweihandler diff,
+  leftHand = zweihandler diff
   } (dif)
   where
     dif = diff+2

@@ -83,16 +83,16 @@ restPlayer player = retval
 giveXP :: Int -> Int -> Player -> Player
 giveXP seed difficulty player =
     modifyPlayerModel player (playerBase player) (inventory player) (PlayerProgress (level (playerProgress player)) (experiencePts (playerProgress player)+ difficulty))
-    
-getRandWeapon :: Int -> HandEquipment
-getRandWeapon seed = do
-  let rng = genRandNum 0 (length allWeapons-1) seed
-  allWeapons!!rng
+
+getRandWeapon :: Int -> Int -> HandEquipment
+getRandWeapon scale seed = do
+  let rng = genRandNum 0 (length (allWeapons scale)-1) seed
+  allWeapons scale!!rng
 
 getRandPotion :: Int -> Int -> Potion
 getRandPotion hp seed = do
-  let rng = genRandNum 0 (length (allPotions 0)-1) seed
-  (allPotions hp)!!rng
+  let rng = genRandNum 0 (length allPotions-1) seed
+  allPotions!!rng
 
 
 getCurrentEncounters:: Int ->Int -> [Stage] -> Int -> Int -> [Stage]
@@ -114,15 +114,15 @@ generateStage hp level seed = do
     tres = Stage.Base.Treasure {
       treasure = GameObjects.Base.Treasure{
       potions = [getRandPotion hp seed],
-      handEquipment = [getRandWeapon seed]
+      handEquipment = [getRandWeapon level seed]
       }
      }
     bossRng = genRandNum 100 200 (seed+15)
-    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 103+level then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
+    enem =  Stage.Base.Enemy (if bossRng >= 100 && bossRng <= 103+bossWant then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
     randBoss = allBoss level seed!!genRandNum 0 (length (allBoss level seed)-1) (seed+10)
-    randMob = allMobs level seed!!genRandNum 0 (length (allMobs level seed)-1) (seed+10) 
+    randMob = allMobs level seed!!genRandNum 0 (length (allMobs level seed)-1) (seed+10)
     rest = Stage.Base.Rest
-
+    bossWant = if level > 47 then 47 else level
 getPlayerName::Player -> String
 getPlayerName player = name (playerBase player)
 
@@ -157,12 +157,23 @@ getStat stat
   where
     check = map toLower stat
 
+levelUpPlayer ::Player-> PlayerProgress
+levelUpPlayer player = retVal
+  where
+    lvl = level (playerProgress player)
+    levelAmount = experiencePts (playerProgress player)`div` 10+lvl 
+    retVal = PlayerProgress
+      (level (playerProgress player)+1)
+      (experiencePts (playerProgress player)-(10+lvl))
+
+
+
 statUpPlayer:: Player -> String -> Player
 statUpPlayer player stat = retVal
   where
     retVal = Player
       (entityAllocateStat (playerBase player) (getStat stat))
-      (PlayerProgress (level (playerProgress player)+1) (experiencePts (playerProgress player)-(10+(level (playerProgress player)))))
+      (levelUpPlayer player)
       (inventory player)
 
 
@@ -193,7 +204,9 @@ displayTreasure tresr wCount pCount retStr
 initPlayer::String -> Player
 initPlayer name = if name /= "Daniel" then createPlayer name else retVal
   where
-    retVal = giveXP 1 10 (createPlayer "Daniel")
+    xpup = giveXP 1 300 (createPlayer "Daniel")
+    retVal = playerPotEquip(playerWepEquip xpup (zweihandler 1) "l") (allPotions!!0)
+
 getPot:: Player -> Bool
 getPot player = potAmount (inventory player) > 0
 

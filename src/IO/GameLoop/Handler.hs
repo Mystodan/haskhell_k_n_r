@@ -185,14 +185,17 @@ handlePlayerActions :: Player -> IO Actions
 handlePlayerActions player = do
   choice <- promptPlayerTurn player
   check <- doubleCheck $ switchResp choice
-  if choice == 'a' then
-    return Attack
-  else if choice == 'b' then
-    return Block
-  else if choice == 'p' then
-    return Combat.Data.Potion
-  else if choice == 'r' then
-    return Combat.Data.Run
+  if check then
+    if choice == 'a' then
+      return Attack
+    else if choice == 'b' then
+      return Block
+    else if choice == 'p' then
+      return Combat.Data.Potion
+    else if choice == 'r' then
+      return Combat.Data.Run
+    else
+      handlePlayerActions player
   else
     handlePlayerActions player
  where
@@ -237,10 +240,11 @@ handleEnemyEncounter message player enemy combat seed
     expgain = if ((difficulty enemy*3)+ add - (level (playerProgress player)`div`2)) < 0 then
       0 else (difficulty enemy*3)+ add - (level (playerProgress player)`div`2)
     add = genRandNum 0 4 seed+10
-    hasEscape = if dexWin then return player else do
-      if genRandNum 0 1 seed == 0 then
+    hasEscape = if dexWin then do putStrLn "DODGED!" ; return player else do
+      if genRandNum 0 1 seed == 0 then do
+        putStrLn "DODGED!"
         return player
-      else redo
+      else getEnemyTurn "You Failed to dodge!" player enemy
     dexWin = dexterity (stats (playerBase player)) >= dexterity (stats (mobBase enemy))
     mobAttack = getMobDmg enemy
     getEnemyTurn m p e = handleEnemyEncounter m p e (Combat False True False False) (seed+10)
@@ -249,7 +253,7 @@ handleEnemyEncounter message player enemy combat seed
         if isFlat (potion_type(potSlot (inventory player))) then
         effectivity (potSlot (inventory player))
         else
-          (getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))`div`effectivity (potSlot (inventory player)))*100
+          (getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))*effectivity (potSlot (inventory player)))`div`100
       else 0
     mobHeal = effectivity (lesserHealthPotion)
     enemyRng = genRandNum 0 19 seed
@@ -260,18 +264,23 @@ handlePlayerTreasChoice:: Stage -> Player -> IO Player
 handlePlayerTreasChoice choice player = do
     wChoice <- promptEquip "Do you wish to equip (any of) the weapon(s)?"
     pChoice <- promptEquip "Do you wish to equip (any of) the potion(s)?"
-    if wChoice && pChoice then do
-      hand <- getWhichHand "Which hand do you wish to Equip the weapon?"
-      return (retWep (retPot player choice) choice hand)
-    else if wChoice && not pChoice then do
-      hand <- getWhichHand "Which hand do you wish to Equip the weapon?"
-      return $ retWep player choice hand
+    if wChoice && pChoice then equip1
+    else if wChoice && not pChoice then equip2
     else if not wChoice && pChoice then
       return $ retPot player choice
     else
       return player
-
   where
+    equip1 = do
+      getH <- getWhichHand "Which hand do you wish to Equip the weapon?"
+      if toLower getH `elem` ['r','l'] then 
+        return (retWep (retPot player choice) choice getH)
+      else equip1
+    equip2 = do
+      getH <- getWhichHand "Which hand do you wish to Equip the weapon?"
+      if toLower getH `elem` ['r','l'] then 
+        return $ retWep player choice getH
+      else equip2
     t_equip = treasure
     retWep x choice hand = playerWepEquip x (weap choice) [hand]
     retPot x choice = playerPotEquip x (pots choice)
@@ -303,6 +312,7 @@ handleEncounter player seed = do
     clearScreen
     setDelay
     putStrLn "\nEnountered Rest"
+    newRestDialog
     handleRestEncounter player
   where
     enemy x = if encounter x == Stage.Base.Boss (bossEntity (encounter x)) then
@@ -328,7 +338,7 @@ handleRestEncounter player = do
   choice <- promptRestEncounter player
   case choice of
     's' -> do
-      if xp >= 10+level (playerProgress player) then
+      if levelAmount > 0 then
         statUpHandler player
       else do
         putStr "Not Enough Exp"
@@ -336,7 +346,8 @@ handleRestEncounter player = do
     'r' -> handleRestPlayer player
     _ -> handleRestEncounter player
   where
-    xp = experiencePts (playerProgress player)
+    lvl = level (playerProgress player)
+    levelAmount = experiencePts (playerProgress player)`div` (10+lvl)
 statUpHandler :: Player -> IO Player
 statUpHandler player = do
   choice <-statUpPrompt
@@ -355,6 +366,9 @@ statUpPrompt = do
   check <- doubleCheck $ switchResp choice
   if check && choice /= "" && toLower(head choice) `elem` choices then
     return (head choice)
+  else if not (toLower(head choice) `elem` choices) then do
+    putStrLn "Invalid input"
+    statUpPrompt
   else do
     putStrLn "Invalid input"
     statUpPrompt
@@ -379,7 +393,6 @@ handleRestPlayer player = do
 promptRestEncounter :: Player -> IO Char
 promptRestEncounter player = do
   let choices = ['r','s']
-  newRestDialog
   putStrLn $ "\nPlayer actions:\n\tStat Up ["++show levelAmount++"], Rest"
   choice <- getLine
   check <- doubleCheck $ switchResp choice
@@ -389,7 +402,8 @@ promptRestEncounter player = do
     putStrLn "Invalid input"
     promptRestEncounter player
   where
-    levelAmount = experiencePts (playerProgress player)`div` 10
+    lvl = level (playerProgress player)
+    levelAmount = experiencePts (playerProgress player)`div` (10+lvl)
     want choice = toLower(head choice)
     switchResp x
       | want x == 's' = "Level Up"

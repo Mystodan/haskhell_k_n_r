@@ -104,8 +104,8 @@ unitTests = TestList [
 
   TestLabel "getCurrentEncounters" $ TestCase $
    assertEqual "gets player's next encounters"
-   (getCurrentEncounters 1 [] 3 1)
-   (getCurrentEncounters 1 [] 3 1),
+   (getCurrentEncounters 1 1 [] 3 1)
+   (getCurrentEncounters 1 1 [] 3 1),
 
   TestLabel "displayTreasure" $ TestCase $
    assertEqual "displays current generated treasures"

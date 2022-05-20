@@ -10,18 +10,18 @@ module GameObjects.BaseObjects(
 import GameObjects.Base
 
 
-allWeapons :: [HandEquipment]
-allWeapons = [zweihandler, enparakystos, shortSword]
+allWeapons :: Int -> [HandEquipment]
+allWeapons x = [zweihandler x,  enparakystos, shortSword]
 
-allPotions :: Int -> [Potion]
-allPotions x = [bloodOfGod,greaterHealthPotion ,lesserHealthPotion ,shieldPotion]
+allPotions :: [Potion]
+allPotions = [bloodOfGod,greaterHealthPotion ,lesserHealthPotion ,shieldPotion]
 
-zweihandler::HandEquipment
-zweihandler = GameObjects.Base.Weapon{
+zweihandler:: Int -> HandEquipment
+zweihandler scale = GameObjects.Base.Weapon{
   weaponbase = BaseWeapon{
     weapon_name = "Zweihandler",
     isTwohand = True,
-    attack = 2,
+    attack = (4+scale)`div`2,
     finesse = 0,
     weapon_rarity  = 0.1
   }
@@ -78,7 +78,7 @@ bloodOfGod  = Potion{
     isOverTurns = False,
     isFlat = False
   },
-  effectivity = 70,
+  effectivity = 75,
   potion_rarity = 0.3
 }
 

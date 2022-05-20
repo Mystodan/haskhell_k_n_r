@@ -188,8 +188,10 @@ handlePlayerActions player = do
   if check then
     if choice == 'a' then
       return Attack
-    else if choice == 'b' then
-      return Block
+    else if choice == 'b' then do
+      putStrLn "Not Implemented Yet!"
+      handlePlayerActions player
+      --return Block
     else if choice == 'p' then
       return Combat.Data.Potion
     else if choice == 'r' then

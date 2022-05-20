@@ -71,40 +71,41 @@ restPlayer player = retval
         (isAlive (playerBase player))
         (stats (playerBase player))
         (equipped (playerBase player))
-    refreshPotion = if potAmount (inventory player) < level (playerProgress player) then
-      InventoryPotion (potSlot (inventory player)) (potAmount (inventory player)+1)
-      else
-        InventoryPotion (potSlot (inventory player)) (potAmount (inventory player))
-
+    refreshPotion = if inventory player /= Entity.Player.Data.InventoryNone then
+      if potAmount (inventory player) < level (playerProgress player) then
+        InventoryPotion (potSlot (inventory player)) (potAmount (inventory player)+1)
+        else
+          InventoryPotion (potSlot (inventory player)) (potAmount (inventory player))
+    else
+      inventory player
 
 
 giveXP :: Int -> Int -> Player -> Player
 giveXP seed difficulty player =
-    modifyPlayerModel player (playerBase player) (inventory player) (PlayerProgress (level (playerProgress player)) (experiencePts (playerProgress player)+ difficulty+ add))
-  where
-    add = genRandNum 0 4 seed+10
+    modifyPlayerModel player (playerBase player) (inventory player) (PlayerProgress (level (playerProgress player)) (experiencePts (playerProgress player)+ difficulty))
+    
 getRandWeapon :: Int -> HandEquipment
 getRandWeapon seed = do
   let rng = genRandNum 0 (length allWeapons-1) seed
   allWeapons!!rng
 
-getRandPotion :: Int -> Potion
-getRandPotion seed = do
-  let rng = genRandNum 0 (length allPotions-1) seed
-  allPotions!!rng
+getRandPotion :: Int -> Int -> Potion
+getRandPotion hp seed = do
+  let rng = genRandNum 0 (length (allPotions 0)-1) seed
+  (allPotions hp)!!rng
 
 
-getCurrentEncounters:: Int -> [Stage] -> Int -> Int -> [Stage]
-getCurrentEncounters level list amount seed
+getCurrentEncounters:: Int ->Int -> [Stage] -> Int -> Int -> [Stage]
+getCurrentEncounters hp level list amount seed
   | amount > 0 = retval
   | otherwise = list
   where
     initStage = []
-    retval = getCurrentEncounters level (append stage list) (amount-1) (seed + 1)
-    stage = generateStage level seed
+    retval = getCurrentEncounters hp level (append stage list) (amount-1) (seed + 1)
+    stage = generateStage hp level seed
 
-generateStage::Int ->Int -> Stage
-generateStage level seed = do
+generateStage::Int ->Int ->Int -> Stage
+generateStage hp level seed = do
   if rng >= 0 && rng< 10 then   tres --0 and 10
   else if rng >= 11 && rng<= 70 then  enem -- 11 and 45
   else rest
@@ -112,12 +113,12 @@ generateStage level seed = do
     rng = genRandNum 1 100 seed
     tres = Stage.Base.Treasure {
       treasure = GameObjects.Base.Treasure{
-      potions = [getRandPotion seed],
+      potions = [getRandPotion hp seed],
       handEquipment = [getRandWeapon seed]
       }
      }
     bossRng = genRandNum 100 200 (seed+15)
-    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 105 then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
+    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 108 then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
     randBoss = allBoss level!!genRandNum 0 (length (allBoss level)-1) (seed+10)
     randMob = allMobs level!!genRandNum 0 (length (allMobs level)-1) (seed+10)
     rest = Stage.Base.Rest
@@ -131,8 +132,10 @@ playerPotEquip player pot = do
   where
     retval = modifyPlayerModel player
       (playerBase player)
-      (InventoryPotion pot (potAmount (inventory player)+1))
+      (InventoryPotion pot (potNum+1))
       (playerProgress player)
+    potNum = if inventory player /= Entity.Player.Data.InventoryNone then
+        potAmount (inventory player) else 0
 
 
 playerWepEquip:: Player -> HandEquipment -> String -> Player
@@ -159,7 +162,7 @@ statUpPlayer player stat = retVal
   where
     retVal = Player
       (entityAllocateStat (playerBase player) (getStat stat))
-      (PlayerProgress (level (playerProgress player)+1) (experiencePts (playerProgress player)-10))
+      (PlayerProgress (level (playerProgress player)+1) (experiencePts (playerProgress player)-(10+(level (playerProgress player)))))
       (inventory player)
 
 
@@ -190,7 +193,7 @@ displayTreasure tresr wCount pCount retStr
 initPlayer::String -> Player
 initPlayer name = if name /= "Daniel" then createPlayer name else retVal
   where
-    retVal = giveXP 1 10 (createPlayer "Daniel") 
+    retVal = giveXP 1 10 (createPlayer "Daniel")
 getPot:: Player -> Bool
 getPot player = potAmount (inventory player) > 0
 
@@ -243,7 +246,7 @@ getEntityDmg entity = getDmg
     getDmg = dmg right + dmg left+strength (stats entity)
 
 getPlayerDmg::Player -> Int
-getPlayerDmg player = getEntityDmg(playerBase player)+level (playerProgress player)
+getPlayerDmg player = getEntityDmg(playerBase player)+ round(fromIntegral (level (playerProgress player)`div` 2))::Int
 
 getMobDmg :: Mob -> Int
 getMobDmg enemy = getEntityDmg(mobBase enemy)+difficulty enemy
@@ -306,11 +309,15 @@ getPlayerStatusPlate player = setContainer retVal 27 0 ""
     hpBar = ("Health:",setHealth currentHP maxHP)
     currentHP = currentHealth (playerBase player)
     equipped x y = (x,y)
+    pot = if inventory player /= Entity.Player.Data.InventoryNone then
+      (potion_name (getPotValues potSlot), show (getPotValues potAmount))
+      else ("None","None")
+
     equipR = equipped "Equipped(r):" eq_r
     equipL = equipped "Equipped(l):" eq_l
-    potEquip = equipped "Potion Slot:" (potion_name (getPotValues potSlot))
-    potNum =  equipped "Potion Amount" (show (getPotValues potAmount))
-    lvl = equipped "Level:" (show (level (playerProgress player)))  
+    potEquip = equipped "Potion Slot:" (fst pot)
+    potNum =  equipped "Potion Amount" (snd pot)
+    lvl = equipped "Level:" (show (level (playerProgress player)))
     getPotValues x =  x (inventory player)
     (eq_r,eq_l) = getCurrentEquipNames player
     maxHP = getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))

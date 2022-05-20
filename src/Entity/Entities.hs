@@ -42,7 +42,7 @@ zombie diff = defineMob "Zombie" MobType.Default Stats{
   vitality = 1,
   strength = 3,
   dexterity = 1,
-  resilience = 3
+  resilience = 2
   } Equipment {
   rightHand = None,
   leftHand = None

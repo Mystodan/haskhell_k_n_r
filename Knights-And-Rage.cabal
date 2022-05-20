@@ -81,7 +81,6 @@ test-suite Knights-And-Rage-test
       HUnit
     , Knights-And-Rage
     , base >=4.7 && <5
-    , doctest
     , haskeline
     , random
     , split

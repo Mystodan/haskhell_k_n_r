@@ -23,6 +23,7 @@ import Entity.Player.Data(
     Player(..),
     PlayerProgress(..)
   )
+import qualified Entity.Player.Data as GameObjects.Base
 
 
 
@@ -33,12 +34,9 @@ createPlayer inn_name =  initPlayer
         vitality = 1,
         strength = 1,
         dexterity = 1,
-        resilience = 0
+        resilience = 1
       }
-    initInventory = InventoryPotion{
-      potSlot = lesserHealthPotion,
-      potAmount = 1
-    }
+    initInventory = Entity.Player.Data.InventoryNone
     initEquipped = Equipment {
       rightHand = None ,
       leftHand = None

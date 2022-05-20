@@ -39,8 +39,12 @@ defineMob mob_name mob_type stats equipment set =  initMob
     }
 
 damageMob :: Mob -> Int -> Mob
-damageMob mob damage = Mob (damageEntity damage (mobBase mob)) (mobType mob) (difficulty mob) 
-
+damageMob mob damage = Mob (damageEntity calculatedDamage (mobBase mob)) (mobType mob) (difficulty mob) 
+  where
+    armor = resilience (stats (mobBase mob))
+    calculatedDamage =
+      if armor > damage then 0
+      else damage - armor
 
 modifyMob::Mob -> Stats -> Equipment -> Mob
 modifyMob mob stats equipment  = initMob

@@ -5,10 +5,10 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           Knights-And-Rage
-version:        0.1.0.0
-description:    Please see the README on GitHub at <https://git.gvk.idi.ntnu.no/course/prog2006/as/daniehhu/knights-and-rage>
-homepage:       https://github.com/daniehhu/Knights-And-Rage#readme
-bug-reports:    https://github.com/daniehhu/Knights-And-Rage/issues
+version:        0.0.8.0
+description:    Please see the README on GitHub at <https://git.gvk.idi.ntnu.no/course/prog2006/as/daniehhu/project-knights-and-rage>
+homepage:       https://github.com/daniehhu/project-knights-and-rage#readme
+bug-reports:    https://github.com/daniehhu/project-knights-and-rage/issues
 author:         Daniel Hao Huynh
 maintainer:     daniehhu@stud.ntnu.no
 copyright:      2022 Daniel Hao Huynh
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/daniehhu/Knights-And-Rage
+  location: https://github.com/daniehhu/project-knights-and-rage
 
 library
   exposed-modules:

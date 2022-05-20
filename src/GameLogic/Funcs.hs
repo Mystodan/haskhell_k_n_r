@@ -118,9 +118,9 @@ generateStage hp level seed = do
       }
      }
     bossRng = genRandNum 100 200 (seed+15)
-    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 108 then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
-    randBoss = allBoss level!!genRandNum 0 (length (allBoss level)-1) (seed+10)
-    randMob = allMobs level!!genRandNum 0 (length (allMobs level)-1) (seed+10)
+    enem =  Stage.Base.Enemy (if rng >= 100 && rng <= 103+level then Stage.Base.Boss randBoss else Stage.Base.Default [randMob] )
+    randBoss = allBoss level seed!!genRandNum 0 (length (allBoss level seed)-1) (seed+10)
+    randMob = allMobs level seed!!genRandNum 0 (length (allMobs level seed)-1) (seed+10) 
     rest = Stage.Base.Rest
 
 getPlayerName::Player -> String

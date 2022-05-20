@@ -15,9 +15,9 @@ import GameLogic.Funcs
 import Data.Char (toLower)
 import GameObjects.Base
     ( Treasure(handEquipment, potions),
-      Potion(potion_name, effectivity),
+      Potion(potion_name, effectivity, potion_type),
       HandEquipment(weaponbase),
-      BaseWeapon(weapon_name) )
+      BaseWeapon(weapon_name), PotionType (isFlat) )
 import Control.Concurrent
 import GHC.Float.RealFracMethods (roundFloatInt)
 import Entity.Base
@@ -126,10 +126,12 @@ promptEquip  prompt = do
   putStrLn prompt
   choice <- getLine
   check <- doubleCheck "choose this"
-  if check && toLower (head choice) == 'y' then
-    return True
-  else
-    return False
+  if check then
+    if check && toLower (head choice) == 'y' then
+      return True
+    else
+      return False
+  else promptEquip  prompt
 
 
 getWhichEquip ::String -> IO Int
@@ -160,13 +162,13 @@ promptPlayerTurn player = do
   let choices = ['a','b','p','r']
   putStrLn $ "Player actions:\n\tAttack, Potion:"++fst pot++"["++snd pot++"], Block, Run"
   choice <- getLine
-  check <- doubleCheck $ switchResp choice
-  if check && choice /= "" && toLower(head choice) `elem` choices  then
-    if inventory player == Entity.Player.Data.InventoryNone && toLower(head choice) == 'p' then do
+
+  if choice /= "" && want choice `elem` choices  then
+    if inventory player == Entity.Player.Data.InventoryNone && want choice == 'p' then do
       putStrLn "No potion in slot"
       promptPlayerTurn player
     else
-      return (head choice)
+      return $ want choice
   else do
     putStrLn "Invalid input"
     promptPlayerTurn player
@@ -176,15 +178,13 @@ promptPlayerTurn player = do
       else ("None","None")
     getPotValues x =  x (inventory player)
     want choice = toLower(head choice)
-    switchResp x
-      | want x == 'a' = "Attack"
-      | want x == 'b' = "Block"
-      | want x == 'p' = "use a Potion"
-      | otherwise = "Run"
+
+
 
 handlePlayerActions :: Player -> IO Actions
 handlePlayerActions player = do
   choice <- promptPlayerTurn player
+  check <- doubleCheck $ switchResp choice
   if choice == 'a' then
     return Attack
   else if choice == 'b' then
@@ -195,7 +195,16 @@ handlePlayerActions player = do
     return Combat.Data.Run
   else
     handlePlayerActions player
+ where
+    want = toLower
+    switchResp x
+      | want x == 'a' = "Attack"
+      | want x == 'b' = "Block"
+      | want x == 'p' = "use a Potion"
+      | want x == 'r' = "Run"
+      | otherwise = ""
 
+  
 testCombat :: Combat
 testCombat = Combat False True False False
 handleEnemyEncounter:: String -> Player -> Mob -> Combat -> Int -> IO Player
@@ -225,7 +234,8 @@ handleEnemyEncounter message player enemy combat seed
       wait 1.5
       getPlayerTurn "The monster died!" (giveXP (seed+5) expgain player) enemy
   where
-    expgain = difficulty enemy*3+ add -(level (playerProgress player)`div`2)
+    expgain = if ((difficulty enemy*3)+ add - (level (playerProgress player)`div`2)) < 0 then
+      0 else (difficulty enemy*3)+ add - (level (playerProgress player)`div`2)
     add = genRandNum 0 4 seed+10
     hasEscape = if dexWin then return player else do
       if genRandNum 0 1 seed == 0 then
@@ -236,20 +246,18 @@ handleEnemyEncounter message player enemy combat seed
     getEnemyTurn m p e = handleEnemyEncounter m p e (Combat False True False False) (seed+10)
     getPlayerTurn m p e = handleEnemyEncounter m p e (Combat True False False False) (seed+10)
     hpHeal = if (inventory player) /= Entity.Player.Data.InventoryNone then
+        if isFlat (potion_type(potSlot (inventory player))) then
         effectivity (potSlot (inventory player))
+        else
+          (getEntityHealth (vitality (stats (playerBase player))) (level (playerProgress player))`div`effectivity (potSlot (inventory player)))*100
       else 0
-    mobHeal = effectivity (lesserHealthPotion 0)
-    enemyRng = genRandNum 0 9 seed
+    mobHeal = effectivity (lesserHealthPotion)
+    enemyRng = genRandNum 0 19 seed
     redo = handleEnemyEncounter message player enemy combat (seed+10)
 
-handleEncounter :: Player -> Int -> IO Player
-handleEncounter player seed = do
-  newEncounterDialog
-  choice <- getEncounter (currentHealth (playerBase player)) (level (playerProgress player)) seed 3
-  if choice == Stage.Base.Treasure (treasure choice) then do
-    clearScreen
-    setDelay
-    putStrLn $ "\nYou have encountered: Treasure \n"++ displayTreasure (treasure choice) 0 0 [("","")]
+
+handlePlayerTreasChoice:: Stage -> Player -> IO Player
+handlePlayerTreasChoice choice player = do
     wChoice <- promptEquip "Do you wish to equip (any of) the weapon(s)?"
     pChoice <- promptEquip "Do you wish to equip (any of) the potion(s)?"
     if wChoice && pChoice then do
@@ -262,6 +270,24 @@ handleEncounter player seed = do
       return $ retPot player choice
     else
       return player
+
+  where
+    t_equip = treasure
+    retWep x choice hand = playerWepEquip x (weap choice) [hand]
+    retPot x choice = playerPotEquip x (pots choice)
+    weap x = head (handEquipment (t_equip x))
+    pots x = head (potions (t_equip x))
+
+
+handleEncounter :: Player -> Int -> IO Player
+handleEncounter player seed = do
+  newEncounterDialog
+  choice <- getEncounter (currentHealth (playerBase player)) (level (playerProgress player)) seed 3
+  if choice == Stage.Base.Treasure (treasure choice) then do
+    clearScreen
+    setDelay
+    putStrLn $ "\nYou have encountered: Treasure \n"++ displayTreasure (treasure choice) 0 0 [("","")]
+    handlePlayerTreasChoice choice player
 
   else if choice == Stage.Base.Enemy (encounter choice) then do
     clearScreen

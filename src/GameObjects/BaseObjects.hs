@@ -14,7 +14,7 @@ allWeapons :: [HandEquipment]
 allWeapons = [zweihandler, enparakystos, shortSword]
 
 allPotions :: Int -> [Potion]
-allPotions x = [bloodOfGod x,greaterHealthPotion x,lesserHealthPotion x,shieldPotion x]
+allPotions x = [bloodOfGod,greaterHealthPotion ,lesserHealthPotion ,shieldPotion]
 
 zweihandler::HandEquipment
 zweihandler = GameObjects.Base.Weapon{
@@ -49,8 +49,8 @@ shortSword = GameObjects.Base.Weapon{
   }
 }
 
-lesserHealthPotion::Int ->Potion
-lesserHealthPotion currH = Potion{
+lesserHealthPotion::Potion
+lesserHealthPotion = Potion{
   potion_name = "Lesser Healing Potion",
   potion_type = GameObjects.Base.Heal{
     isOverTurns = False,
@@ -60,8 +60,8 @@ lesserHealthPotion currH = Potion{
   potion_rarity = 0.5
 }
 
-greaterHealthPotion:: Int -> Potion
-greaterHealthPotion currH = Potion{
+greaterHealthPotion:: Potion
+greaterHealthPotion = Potion{
   potion_name = "Greater Healing Potion",
   potion_type = GameObjects.Base.Heal{
     isOverTurns = False,
@@ -71,19 +71,19 @@ greaterHealthPotion currH = Potion{
   potion_rarity = 0.3
 }
 
-bloodOfGod:: Int -> Potion
-bloodOfGod currH = Potion{
+bloodOfGod::  Potion
+bloodOfGod  = Potion{
   potion_name = "Vial(blood of god)",
   potion_type = GameObjects.Base.Heal{
     isOverTurns = False,
-    isFlat = True
+    isFlat = False
   },
-  effectivity = round(fromIntegral ((currH * 7)`div` 10))::Int,
+  effectivity = 70,
   potion_rarity = 0.3
 }
 
-shieldPotion::Int ->Potion
-shieldPotion currH= Potion{
+shieldPotion:: Potion
+shieldPotion = Potion{
   potion_name = "Shield Potion",
   potion_type = GameObjects.Base.Guard,
   effectivity = 1,

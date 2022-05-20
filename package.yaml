@@ -1,6 +1,6 @@
 name:                Knights-And-Rage
-version:             0.1.0.0
-github:              "daniehhu/Knights-And-Rage"
+version:             0.0.8.0
+github:              "daniehhu/project-knights-and-rage"
 license:             BSD3
 author:              "Daniel Hao Huynh"
 maintainer:          "daniehhu@stud.ntnu.no"
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:        Please see the README on GitHub at <https://git.gvk.idi.ntnu.no/course/prog2006/as/daniehhu/knights-and-rage>
+description:        Please see the README on GitHub at <https://git.gvk.idi.ntnu.no/course/prog2006/as/daniehhu/project-knights-and-rage>
 
 dependencies:
 - base >= 4.7 && < 5

@@ -12,7 +12,7 @@ Use `.stack-work\dist\d53b6a14\build\Knights-And-Rage-exe\Knights-And-Rage-exe`<
 
     stack exec Knights-And-Rage-exe
 
-#### All commands for running application with flags
+#### All commands for running application with flags( from current directory)
     .\.stack-work\dist\d53b6a14\build\Knights-And-Rage-exe\Knights-And-Rage-exe.exe --h
 
     .\.stack-work\dist\d53b6a14\build\Knights-And-Rage-exe\Knights-And-Rage-exe.exe --help

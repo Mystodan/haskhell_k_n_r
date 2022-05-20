@@ -43,8 +43,8 @@ unitTests = TestList [
 
   TestLabel "healPlayer" $ TestCase $
    assertEqual "heals a player"
-   (healPlayer 1 (createPlayer "Lars"))
-   (healPlayer 1 (createPlayer "Lars")),
+   (healPlayer 1 (initPlayer "Daniel"))
+   (healPlayer 1 (initPlayer "Daniel")),
 
   TestLabel "healMob" $ TestCase $
    assertEqual "gets player's current damage"
@@ -73,8 +73,8 @@ unitTests = TestList [
 
   TestLabel "entityEquip" $ TestCase $
    assertEqual "returns entity with equipped weapon"
-   (entityEquip (playerBase(createPlayer "Lars")) (allWeapons!!1) (getHand "r"))
-   (entityEquip (playerBase(createPlayer "Lars")) (allWeapons!!1) (getHand "r")),
+   (entityEquip (playerBase(createPlayer "Lars")) (allWeapons 1!!1) (getHand "r"))
+   (entityEquip (playerBase(createPlayer "Lars")) (allWeapons 1!!1) (getHand "r")),
 
 
   TestLabel "playerPotEquip" $ TestCase $
@@ -84,13 +84,13 @@ unitTests = TestList [
 
   TestLabel "playerWepEquip" $ TestCase $
    assertEqual "returns player with weapon"
-   (playerWepEquip (createPlayer "Lars") (allWeapons!!1) "r")
-   (playerWepEquip (createPlayer "Lars") (allWeapons!!1) "r"),
+   (playerWepEquip (createPlayer "Lars") (allWeapons 1!!1) "r")
+   (playerWepEquip (createPlayer "Lars") (allWeapons 1!!1) "r"),
 
   TestLabel "generateStage" $ TestCase $
    assertEqual "generates a random stage"
-   (generateStage 1 2)
-   (generateStage 1 2),
+   (generateStage 1 1 2)
+   (generateStage 1 1 2),
 
   TestLabel "setHealth" $ TestCase $
    assertEqual "formats health for print"
@@ -109,8 +109,8 @@ unitTests = TestList [
 
   TestLabel "displayTreasure" $ TestCase $
    assertEqual "displays current generated treasures"
-   (displayTreasure (Treasure [head allPotions] [head allWeapons]) 0 0 [("","")])
-   (displayTreasure (Treasure [head allPotions] [head allWeapons]) 0 0 [("","")]),
+   (displayTreasure (Treasure [head allPotions] [head (allWeapons 1)]) 0 0 [("","")])
+   (displayTreasure (Treasure [head allPotions] [head (allWeapons 1)]) 0 0 [("","")]),
 
   TestLabel "getCurrentEquipNames" $ TestCase $
    assertEqual "gets player's current equips"

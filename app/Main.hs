@@ -20,7 +20,7 @@ main = do
   else
     startGame
   where
-    currFlags = ["--h","--help", "h", "help"] 
+    currFlags = ["--h","--help"] 
     help = putStrLn helpText
     noSuchArgs x = putStrLn $ noSuchArgsText++x
     startGame = do

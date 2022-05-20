@@ -67,7 +67,8 @@ inappropriateAmountOfFlags x = "Invalid amount of flags found:"++show x
 helpText::String 
 helpText = 
   "\nWelcome to the help section of Knights and Rage!"
-  ++"\n This is a roguelike game with player progression, however if you lose you die! and you lose all progression."
-  ++"\n This program will not save your progress, however such implementaion would have been added if more time was given.\n"
-  ++"Knights and Rage is a endless game, which means it can run on forever, with no levelcap and infinite scaling on enemies\n"
-  ++"@TODO: More weapons, weapon Type and effects, potion effects, etc., proper weapon scaling, drop system on enemies, randomized scaled weapons on enemies\n"
+  ++"\nThis is a roguelike game with player progression, however if you lose you die! and you lose all progression."
+  ++"\nThis game will not save your progress, however such implementaion would have been added if more time was given."
+  ++"\nKnights and Rage is a endless game, which means it can run on forever, with no levelcap and infinite scaling on enemies"
+  ++"\n@TODO: More weapons, weapon Type and effects, potion effects, etc., proper weapon scaling, drop system on enemies, randomized scaled weapons on enemies"
+  ++"\n\n"
